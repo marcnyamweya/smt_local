@@ -11,6 +11,11 @@ class Student extends Model
 
     protected $fillable = ['teacher_id', 'name', 'email', 'age','phone','course'];
 
+    public function profilePicture()
+    {
+        return $this->morphOne(ProfilePicture::class, 'userable');
+    }
+
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);

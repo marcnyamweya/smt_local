@@ -6,19 +6,19 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
- 
+use Illuminate\Support\Facades\Storage;
+
 
 class StudentController extends Controller
 {
-   
+
     public function index(Request $request)
     {
-       $students = $request->user()->students;
-    Log::info('Retrieved students for user: ' . $request->user()->id, ['students' => $students]);
+        $students = $request->user()->students;
+        Log::info('Retrieved students for user: ' . $request->user()->id, ['students' => $students]);
         return response()->json([
-        'students' => $students->values()->toArray()
-    ]);
-        
+            'students' => $students->values()->toArray()
+        ]);
     }
 
     public function store(Request $request)
@@ -52,5 +52,28 @@ class StudentController extends Controller
         $student->delete();
         return response()->json(['message' => 'Deleted']);
     }
-    
+
+    public function uploadProfilePicture(Request $request, Student $student)
+    {
+        $request->validate([
+            'picture' => 'required|image|max:2048', // max 2MB
+        ]);
+
+        $file = $request->file('picture');
+        $path = $file->store('profile_pictures', 'public');
+
+        if ($student->profilePicture) {
+            Storage::disk('public')->delete($student->profilePicture->filename);
+            $student->profilePicture()->delete();
+        }
+
+        $student->profilePicture()->create([
+            'filename' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+        ]);
+
+        return response()->json(['message' => 'Profile picture uploaded successfully.']);
+    }
 }
