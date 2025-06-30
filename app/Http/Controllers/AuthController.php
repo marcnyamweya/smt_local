@@ -67,7 +67,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $status = Password::sendResetLink(
+        $status = Password::broker('teachers')->sendResetLink(
             $request->only('email')
         );
 
